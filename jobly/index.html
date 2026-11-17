@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Jobly · Powered by Sam.Co</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.min.js"></script>
+  <style>
+    :root {
+      --navy: #0B2545;
+      --navy-soft: #14365E;
+      --royal: #2156D6;
+      --royal-hover: #1A47B8;
+      --royal-soft: #E8EEFB;
+      --bg: #FFFFFF;
+      --panel: #F3F5F8;
+      --border: #D9DEE5;
+      --text: #0B2545;
+      --muted: #5C6B7A;
+      --danger: #A11B32;
+      --danger-soft: #F8E6EA;
+      --success: #1C6B4A;
+      --success-soft: #E3F3EC;
+      --shadow: 0 1px 2px rgba(11, 37, 69, 0.05), 0 10px 28px rgba(11, 37, 69, 0.06);
+      --radius: 12px;
+      --font: "Segoe UI", "Helvetica Neue", ui-sans-serif, system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+      min-height: 100vh;
+    }
+    button, input, select, textarea { font: inherit; color: inherit; }
+    button { cursor: pointer; }
+    a { color: var(--royal); }
+    a:hover { color: var(--royal-hover); }
+    :focus-visible {
+      outline: 2px solid var(--royal);
+      outline-offset: 2px;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: rgba(255,255,255,0.94);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+    .topbar-inner, .toolbar, main, .toast {
+      width: min(1180px, calc(100% - 2rem));
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .topbar-inner { padding: 0.9rem 0 0; }
+    .top-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem 1.25rem;
+      flex-wrap: wrap;
+    }
+    h1 {
+      margin: 0;
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: var(--navy);
+    }
+    .counts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem 0.9rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    .counts strong { color: var(--navy); font-weight: 650; }
+    .search {
+      margin-left: auto;
+      position: relative;
+      min-width: min(100%, 260px);
+      flex: 1 1 220px;
+      max-width: 360px;
+    }
+    .search input {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      border-radius: 999px;
+      padding: 0.48rem 0.9rem 0.48rem 2.1rem;
+    }
+    .search::before {
+      content: "";
+      position: absolute;
+      left: 0.8rem;
+      top: 50%;
+      width: 0.7rem;
+      height: 0.7rem;
+      transform: translateY(-50%);
+      border: 1.5px solid var(--muted);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .views {
+      display: flex;
+      gap: 0.2rem;
+      margin: 0.85rem 0 0;
+      overflow-x: auto;
+    }
+    .views button {
+      appearance: none;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      padding: 0.7rem 0.9rem 0.65rem;
+      border-bottom: 2px solid transparent;
+      font-weight: 600;
+      font-size: 0.92rem;
+      white-space: nowrap;
+    }
+    .views button[aria-selected="true"] {
+      color: var(--navy);
+      border-bottom-color: var(--royal);
+    }
+    .views button .n {
+      display: inline-block;
+      margin-left: 0.35rem;
+      background: var(--panel);
+      color: var(--navy);
+      border-radius: 999px;
+      padding: 0 0.4rem;
+      font-size: 0.75rem;
+      min-width: 1.3rem;
+      text-align: center;
+    }
+    .views button[aria-selected="true"] .n { background: var(--royal-soft); color: var(--royal); }
+
+    .toolbar { padding: 0.9rem 0 0.3rem; }
+    .section-tabs, .filter-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      align-items: center;
+    }
+    .section-tabs { margin-bottom: 0.7rem; }
+    .pill, .filter-row select, .sort-wrap select {
+      border: 1px solid var(--border);
+      background: var(--bg);
+      border-radius: 999px;
+      padding: 0.32rem 0.75rem;
+      font-size: 0.84rem;
+      color: var(--navy);
+    }
+    .section-tabs button.pill[aria-selected="true"],
+    button.pill[aria-pressed="true"] {
+      background: var(--navy);
+      border-color: var(--navy);
+      color: #fff;
+    }
+    .filter-row { gap: 0.5rem 0.65rem; }
+    .filter-row label, .sort-wrap label {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.75rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .filter-row select, .sort-wrap select {
+      text-transform: none;
+      letter-spacing: 0;
+      font-size: 0.84rem;
+      background: var(--panel);
+    }
+    button.linkish, button.clear {
+      border: 0;
+      background: none;
+      color: var(--royal);
+      font-weight: 600;
+      font-size: 0.84rem;
+      padding: 0.3rem 0.2rem;
+    }
+    button.clear:disabled { color: var(--muted); cursor: default; }
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      min-height: 0.5rem;
+      margin-top: 0.65rem;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      background: var(--royal-soft);
+      color: var(--navy);
+      border: 0;
+      border-radius: 999px;
+      padding: 0.2rem 0.55rem 0.2rem 0.7rem;
+      font-size: 0.78rem;
+    }
+    .chip span.x { font-weight: 700; color: var(--royal); }
+
+    main { padding: 0.6rem 0 4rem; }
+    .empty {
+      background: var(--panel);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 2.2rem 1.4rem;
+      color: var(--muted);
+      text-align: center;
+    }
+    .empty strong { color: var(--navy); display: block; font-size: 1.05rem; margin-bottom: 0.3rem; }
+
+    .role {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1.05rem 1.15rem 0.95rem;
+      margin: 0 0 0.75rem;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .role:hover { border-color: #C5CDD8; }
+    .role.stale { opacity: 0.72; }
+    .role-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1.5fr) minmax(9rem, 0.6fr) auto;
+      gap: 0.8rem 1.1rem;
+      align-items: start;
+    }
+    @media (max-width: 800px) {
+      .role-head { grid-template-columns: 1fr; }
+      .search { margin-left: 0; max-width: none; }
+    }
+    .badges { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-bottom: 0.3rem; }
+    .badge {
+      display: inline-block;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.14rem 0.42rem;
+      border-radius: 4px;
+    }
+    .badge.new { background: var(--royal-soft); color: var(--royal); }
+    .badge.source { background: var(--panel); color: var(--navy-soft); letter-spacing: 0.02em; text-transform: none; font-weight: 600; }
+    .badge.progressed { background: var(--success-soft); color: var(--success); }
+    .badge.stale { background: var(--panel); color: var(--muted); }
+    .role-title { margin: 0; font-size: 1.08rem; letter-spacing: -0.02em; line-height: 1.3; }
+    .role-title a { color: var(--navy); text-decoration: none; }
+    .role-title a:hover { color: var(--royal); text-decoration: underline; text-underline-offset: 3px; }
+    .meta-line { margin: 0.28rem 0 0; color: var(--muted); font-size: 0.9rem; }
+    .facts { display: flex; flex-direction: column; gap: 0.15rem; }
+    .facts dt {
+      font-size: 0.68rem;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .facts dd { margin: 0; font-size: 0.92rem; font-weight: 600; }
+    .facts .gbp { font-weight: 500; color: var(--muted); font-size: 0.84rem; }
+    .actions { display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: flex-end; }
+    @media (max-width: 800px) { .actions { justify-content: flex-start; } }
+    .btn {
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      padding: 0.32rem 0.75rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--navy);
+    }
+    .btn:hover { border-color: #B8C0CB; }
+    .btn.primary { background: var(--royal); border-color: var(--royal); color: #fff; }
+    .btn.primary:hover { background: var(--royal-hover); border-color: var(--royal-hover); }
+    .btn.danger { color: var(--danger); border-color: #E3B7C0; }
+    .btn.danger:hover { background: var(--danger-soft); }
+    .btn.ghost { background: var(--panel); }
+    .btn.cv { text-decoration: none; display: inline-flex; align-items: center; }
+    a.btn.cv { color: var(--navy); }
+    .cv-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      align-items: center;
+      margin-top: 0.85rem;
+    }
+    details.more { margin-top: 0.7rem; border-top: 1px dashed var(--border); padding-top: 0.55rem; }
+    details.more > summary {
+      cursor: pointer;
+      list-style: none;
+      font-weight: 600;
+      color: var(--navy);
+      font-size: 0.88rem;
+    }
+    details.more > summary::-webkit-details-marker { display: none; }
+    details.more > summary::before { content: "▸ "; color: var(--muted); }
+    details.more[open] > summary::before { content: "▾ "; }
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem 1.2rem;
+      margin-top: 0.7rem;
+    }
+    @media (max-width: 700px) { .detail-grid { grid-template-columns: 1fr; } }
+    .points { margin: 0; padding: 0; list-style: none; font-size: 0.88rem; }
+    .points li { display: grid; grid-template-columns: 0.95rem 1fr; gap: 0.3rem; margin: 0 0 0.28rem; }
+    .points .mark { font-weight: 700; }
+    .pro .mark { color: var(--success); }
+    .con .mark { color: var(--danger); }
+    .message-box {
+      background: var(--panel);
+      border-radius: 10px;
+      padding: 0.75rem 0.85rem;
+      white-space: pre-wrap;
+      font-size: 0.88rem;
+    }
+    .note-line, .reason-line { margin: 0.45rem 0 0; font-size: 0.86rem; color: var(--muted); }
+    .muted { color: var(--muted); }
+
+    .toast {
+      position: fixed;
+      bottom: 1.2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--navy);
+      color: #fff;
+      padding: 0.55rem 0.9rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      box-shadow: var(--shadow);
+      z-index: 60;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .toast.show { opacity: 1; }
+
+    dialog {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 0;
+      width: min(28rem, calc(100% - 2rem));
+      box-shadow: var(--shadow);
+      color: var(--text);
+      background: var(--bg);
+    }
+    dialog::backdrop { background: rgba(11, 37, 69, 0.35); }
+    .dialog-body { padding: 1.15rem 1.2rem 1.2rem; }
+    .dialog-body h2 { margin: 0 0 0.35rem; font-size: 1.1rem; }
+    .dialog-body p.lead { margin: 0 0 0.8rem; color: var(--muted); font-size: 0.9rem; }
+    .reason-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0 0 0.8rem; }
+    .reason-chips button.pill[aria-pressed="true"] {
+      background: var(--navy);
+      color: #fff;
+      border-color: var(--navy);
+    }
+    textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      border-radius: 10px;
+      padding: 0.6rem 0.7rem;
+      min-height: 5rem;
+      resize: vertical;
+    }
+    .dialog-actions { display: flex; justify-content: flex-end; gap: 0.45rem; margin-top: 0.9rem; }
+
+    .sr-only {
+      position: absolute;
+      width: 1px; height: 1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+    }
+    [hidden] { display: none !important; }
+    body.locked .topbar, body.locked .toolbar, body.locked main { display: none; }
+    .login { display: none; min-height: 100vh; align-items: center; justify-content: center; padding: 1.5rem; background: var(--panel); }
+    body.locked .login { display: flex; }
+    .login-card { width: 100%; max-width: 380px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 2rem 1.75rem; }
+    .login-card h1 { margin: 0 0 .25rem; font-size: 1.35rem; color: var(--navy); }
+    .login-card p { margin: 0 0 1.25rem; color: var(--muted); font-size: .92rem; }
+    .login-card input[type=password] { width: 100%; padding: .7rem .85rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); font-size: 1rem; }
+    .login-card button { width: 100%; margin-top: .9rem; padding: .7rem; border: 0; border-radius: 10px; background: var(--royal); color: #fff; font-weight: 600; font-size: 1rem; }
+    .login-card button:hover { background: var(--royal-hover); }
+    .login-card button[disabled] { opacity: .6; cursor: default; }
+    .login-error { color: var(--danger); font-size: .88rem; margin-top: .7rem; min-height: 1.2em; }
+    .signout { background: none; border: 1px solid var(--border); border-radius: 999px; padding: .3rem .8rem; font-size: .82rem; color: var(--muted); }
+    .signout:hover { color: var(--navy); border-color: var(--navy-soft); }
+  
+    .brand-sub { font-size: 0.6em; font-weight: 500; color: #64748b; margin-left: 6px; letter-spacing: 0; }
+    h1.brand, .login-card h1.brand, .topbar h1.brand { color: #ff1493; }
+  </style>
+</head>
+<body class="locked">
+  <section class="login" aria-labelledby="login-title">
+    <form class="login-card" id="login-form" autocomplete="on">
+      <h1 id="login-title" class="brand">Jobly <span class="brand-sub">Powered by Sam.Co</span></h1>
+      <p>Enter your password to see your roles.</p>
+      <input type="text" name="username" autocomplete="username" value="sn-tracker@jobtracker.invalid" hidden readonly>
+      <label for="login-password" class="sr-only">Password</label>
+      <input id="login-password" type="password" autocomplete="current-password" placeholder="Password" required>
+      <button type="submit" id="login-btn">Sign in</button>
+      <div class="login-error" id="login-error" role="alert"></div>
+    </form>
+  </section>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="top-row">
+        <h1 class="brand">Jobly <span class="brand-sub">Powered by Sam.Co</span></h1>
+        <div class="counts" id="counts"></div>
+        <button type="button" class="signout" id="signout">Sign out</button>
+        <label class="search">
+          <span class="sr-only">Search title, company or location</span>
+          <input id="q" type="search" placeholder="Search title, company, location" autocomplete="off">
+        </label>
+      </div>
+      <nav class="views" role="tablist" aria-label="Tracker pages" id="view-tabs"></nav>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <div class="section-tabs" role="tablist" aria-label="Role section" id="section-tabs"></div>
+    <div class="filter-row">
+      <label id="applied-filter-wrap" hidden>
+        Applied
+        <select id="applied-filter" aria-label="Applied sub-filter">
+          <option value="all">All applied</option>
+          <option value="applied">Applied only</option>
+          <option value="progressed">Progressed only</option>
+        </select>
+      </label>
+      <label>
+        Country
+        <select id="country" aria-label="Filter by country"><option value="all">All</option></select>
+      </label>
+      <label>
+        Posted on
+        <select id="source" aria-label="Filter by source"><option value="all">All</option></select>
+      </label>
+      <label>
+        Work pattern
+        <select id="work" aria-label="Filter by work pattern">
+          <option value="all">All</option>
+          <option value="remote">Remote</option>
+          <option value="hybrid">Hybrid</option>
+          <option value="office">Office</option>
+          <option value="not-stated">Not stated</option>
+        </select>
+      </label>
+      <button type="button" class="pill" id="new-only" aria-pressed="false">New only</button>
+      <span class="sort-wrap">
+        <label>
+          Sort
+          <select id="sort" aria-label="Sort roles">
+            <option value="salary-desc">Salary high to low</option>
+            <option value="salary-asc">Salary low to high</option>
+            <option value="newest">Newest first</option>
+            <option value="company">Company A–Z</option>
+            <option value="status">Status</option>
+          </select>
+        </label>
+      </span>
+      <button type="button" class="clear" id="clear">Clear filters</button>
+    </div>
+    <div class="chips" id="chips"></div>
+  </div>
+
+  <main id="main"></main>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <dialog id="save-dialog" aria-labelledby="save-title">
+    <form class="dialog-body" method="dialog" id="save-form">
+      <h2 id="save-title">Save this role</h2>
+      <p class="lead" id="save-lead"></p>
+      <label for="save-note" class="sr-only">Optional note</label>
+      <textarea id="save-note" placeholder="Optional note (why you want to come back to this)"></textarea>
+      <div class="dialog-actions">
+        <button type="submit" value="cancel" class="btn">Cancel</button>
+        <button type="submit" value="confirm" class="btn primary">Save role</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="reject-dialog" aria-labelledby="reject-title">
+    <form class="dialog-body" method="dialog" id="reject-form">
+      <h2 id="reject-title">Reject this role</h2>
+      <p class="lead" id="reject-lead"></p>
+      <div class="reason-chips" id="reject-reasons"></div>
+      <label for="reject-detail" class="sr-only">Optional detail</label>
+      <textarea id="reject-detail" placeholder="Optional detail (required if you pick Other)"></textarea>
+      <div class="dialog-actions">
+        <button type="submit" value="cancel" class="btn">Cancel</button>
+        <button type="submit" value="confirm" class="btn danger">Reject</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script>
+    const SUPABASE_URL = "https://epbugjebpspsajucdpgf.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_ujBC14g4MYmiNiSFZp_aLg_R91Do0Kb";
+    const LOGIN_EMAIL = "sn-tracker@jobtracker.invalid";
+    const CV_BUCKET = "job-tracker-cvs";
+    const SIGN_TTL = 6 * 3600;
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+      auth: { persistSession: true, autoRefreshToken: true, storageKey: "job-tracker-auth" }
+    });
+    let signed = { pdf: {}, docx: {}, at: 0 };
+    const SECTIONS = ["London", "International", "Salary not stated"];
+    const VIEWS = [
+      { id: "live", label: "Live jobs" },
+      { id: "saved", label: "Saved" },
+      { id: "applied", label: "Applied" },
+      { id: "rejected", label: "Rejected" }
+    ];
+    const REJECT_REASONS = [
+      ["salary too low", "Salary too low"],
+      ["wrong seniority", "Wrong seniority"],
+      ["sector", "Sector"],
+      ["location/office days", "Location / office days"],
+      ["skills mismatch", "Skills mismatch"],
+      ["agency", "Agency"],
+      ["other", "Other"]
+    ];
+    const STATUS_ORDER = { live: 0, saved: 1, applied: 2, progressed: 3, rejected: 4 };
+    const STORAGE_KEY = "job-tracker:ui";
+
+    let roles = [];
+    const state = {
+      view: "live",
+      section: "all",
+      q: "",
+      appliedFilter: "all",
+      country: "all",
+      source: "all",
+      work: "all",
+      newOnly: false,
+      sort: "salary-desc"
+    };
+    let pendingId = null;
+    let rejectReason = "";
+
+    const $ = (id) => document.getElementById(id);
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const saved = JSON.parse(raw);
+        Object.assign(state, saved);
+        if (!VIEWS.some(v => v.id === state.view)) state.view = "live";
+      } catch {}
+    }
+
+    function saveState() {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
+    }
+
+    function canonicalStatus(role) {
+      const s = (role.status || "live").toLowerCase();
+      if (s === "not applied" || s === "new" || s === "new/live") return "live";
+      return s;
+    }
+
+    function parseSalaryGbp(role) {
+      const texts = [];
+      for (const value of [role.salary_gbp, role.salary]) {
+        if (value == null) continue;
+        const text = String(value).trim();
+        if (!text || /^(not stated|n\/a|na|none|-)$/i.test(text)) continue;
+        texts.push(text);
+      }
+      for (const text of texts) {
+        const amounts = salaryAmounts(text);
+        if (amounts.length) return { min: Math.min(...amounts), max: Math.max(...amounts) };
+      }
+      return null;
+    }
+
+    function salaryAmounts(text) {
+      let raw = String(text).toLowerCase().replace(/,/g, "");
+      raw = raw.replace(/£/g, " ").replace(/\bgbp\b/g, " ");
+      raw = raw.replace(/[–—−]/g, "-");
+      const amounts = [];
+      const kRe = /(\d+(?:\.\d+)?)\s*k\b/gi;
+      let m;
+      while ((m = kRe.exec(raw))) amounts.push(parseFloat(m[1]) * 1000);
+      const remainder = raw.replace(/(\d+(?:\.\d+)?)\s*k\b/gi, " ");
+      const nRe = /\d+(?:\.\d+)?/g;
+      while ((m = nRe.exec(remainder))) {
+        const value = parseFloat(m[0]);
+        if (value >= 1000) amounts.push(value);
+      }
+      return amounts;
+    }
+
+    function workKind(pattern) {
+      const text = (pattern || "").trim().toLowerCase();
+      if (!text || text === "not stated" || text === "n/a" || text === "na") return "not-stated";
+      const remote = /\bremote\b/.test(text);
+      const hybrid = /\bhybrid\b/.test(text);
+      const office = /\b(office|on-?site|in-office)\b/.test(text);
+      if (remote && !hybrid) return "remote";
+      if (hybrid) return "hybrid";
+      if (office) return "office";
+      return "other";
+    }
+
+    function workLabel(kind) {
+      return { remote: "Remote", hybrid: "Hybrid", office: "Office", "not-stated": "Not stated", other: "Other" }[kind] || kind;
+    }
+
+    function inView(role) {
+      const status = canonicalStatus(role);
+      if (state.view === "live") return status === "live" && role.in_latest !== false;
+      if (state.view === "saved") return status === "saved";
+      if (state.view === "applied") return status === "applied" || status === "progressed";
+      if (state.view === "rejected") return status === "rejected";
+      return false;
+    }
+
+    function visible(role) {
+      if (!inView(role)) return false;
+      if (state.section !== "all" && (role.section || "Salary not stated") !== state.section) return false;
+      if (state.view === "applied") {
+        const status = canonicalStatus(role);
+        if (state.appliedFilter === "applied" && status !== "applied") return false;
+        if (state.appliedFilter === "progressed" && status !== "progressed") return false;
+      }
+      if (state.country !== "all" && (role.country || "").trim() !== state.country) return false;
+      if (state.source !== "all" && (role.source || "").trim() !== state.source) return false;
+      if (state.work !== "all" && workKind(role.work_pattern) !== state.work) return false;
+      if (state.newOnly && !role.is_new) return false;
+      const q = state.q.trim().toLowerCase();
+      if (q) {
+        const blob = [role.title, role.company, role.location, role.country].map(v => String(v || "").toLowerCase()).join(" ");
+        if (!blob.includes(q)) return false;
+      }
+      return true;
+    }
+
+    function sortRoles(list) {
+      const copy = list.slice();
+      const cmp = (a, b) => {
+        if (state.sort === "salary-desc" || state.sort === "salary-asc") {
+          const pa = parseSalaryGbp(a);
+          const pb = parseSalaryGbp(b);
+          if (!pa && !pb) return 0;
+          if (!pa) return 1;
+          if (!pb) return -1;
+          const va = state.sort === "salary-desc" ? pa.max : pa.min;
+          const vb = state.sort === "salary-desc" ? pb.max : pb.min;
+          return state.sort === "salary-desc" ? vb - va : va - vb;
+        }
+        if (state.sort === "newest") {
+          const da = String(a.first_seen || a.last_seen || "");
+          const db = String(b.first_seen || b.last_seen || "");
+          if (da !== db) return db.localeCompare(da);
+          return String(a.title || "").localeCompare(String(b.title || ""), "en-GB");
+        }
+        if (state.sort === "company") {
+          return String(a.company || "").localeCompare(String(b.company || ""), "en-GB", { sensitivity: "base" })
+            || String(a.title || "").localeCompare(String(b.title || ""), "en-GB", { sensitivity: "base" });
+        }
+        if (state.sort === "status") {
+          return (STATUS_ORDER[canonicalStatus(a)] ?? 9) - (STATUS_ORDER[canonicalStatus(b)] ?? 9);
+        }
+        return 0;
+      };
+      copy.sort(cmp);
+      return copy;
+    }
+
+    function unique(values) {
+      return [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b, "en-GB", { sensitivity: "base" }));
+    }
+
+    function formatGbp(n) {
+      if (n >= 1000 && n % 1000 === 0 && n >= 10000) return "£" + (n / 1000).toFixed(n % 10000 === 0 ? 0 : 1) + "k";
+      return "£" + Math.round(n).toLocaleString("en-GB");
+    }
+
+    function salaryDisplay(role) {
+      const raw = (role.salary || "").trim();
+      const gbpText = role.salary_gbp == null ? "" : String(role.salary_gbp).trim();
+      const international = (role.section || "") === "International";
+      let html = escapeHtml(raw || "Not stated");
+      if (international && gbpText && gbpText.toLowerCase() !== raw.toLowerCase()) {
+        html += `<div class="gbp">${escapeHtml(gbpText)} GBP</div>`;
+      }
+      return html;
+    }
+
+    function cvHref(rel, kind) {
+      const trimmed = (rel || "").replace(/^\/+/, "");
+      return (signed[kind] || {})[trimmed] || "#";
+    }
+
+    function splitPoints(raw) {
+      if (raw == null || raw === "") return [];
+      if (Array.isArray(raw)) return raw.map(x => String(x).trim()).filter(Boolean);
+      return String(raw).split(";").map(x => x.trim()).filter(Boolean);
+    }
+
+    function viewCounts() {
+      const counts = { live: 0, saved: 0, applied: 0, rejected: 0, total: roles.length, isNew: 0, appliedN: 0, progressed: 0 };
+      for (const role of roles) {
+        const status = canonicalStatus(role);
+        if (status === "live" && role.in_latest !== false) counts.live += 1;
+        if (status === "saved") counts.saved += 1;
+        if (status === "applied" || status === "progressed") counts.applied += 1;
+        if (status === "rejected") counts.rejected += 1;
+        if (role.is_new) counts.isNew += 1;
+        if (status === "applied") counts.appliedN += 1;
+        if (status === "progressed") counts.progressed += 1;
+      }
+      return counts;
+    }
+
+    function fillSelect(sel, values, current) {
+      const wanted = ["all", ...values];
+      const existing = [...sel.options].map(o => o.value);
+      const same = existing.length === wanted.length && existing.every((v, i) => v === wanted[i]);
+      if (!same) {
+        sel.innerHTML = "";
+        for (const val of wanted) {
+          const opt = document.createElement("option");
+          opt.value = val;
+          opt.textContent = val === "all" ? "All" : val;
+          sel.appendChild(opt);
+        }
+      }
+      sel.value = values.includes(current) || current === "all" ? current : "all";
+      if (sel.value !== current) state[sel.id] = "all";
+    }
+
+    function renderChrome() {
+      const c = viewCounts();
+      $("counts").innerHTML = `
+        <span><strong>${c.total}</strong> total</span>
+        <span><strong>${c.isNew}</strong> new</span>
+        <span><strong>${c.appliedN + c.progressed}</strong> applied</span>
+        <span><strong>${c.progressed}</strong> progressed</span>`;
+
+      $("view-tabs").innerHTML = VIEWS.map(v => {
+        const n = c[v.id];
+        const on = state.view === v.id;
+        return `<button type="button" role="tab" data-view="${v.id}" aria-selected="${on ? "true" : "false"}">${escapeHtml(v.label)}<span class="n">${n}</span></button>`;
+      }).join("");
+
+      $("section-tabs").innerHTML = ["all", ...SECTIONS].map(s => {
+        const label = s === "all" ? "All" : s;
+        return `<button type="button" class="pill" role="tab" data-section="${escapeHtml(s)}" aria-selected="${state.section === s ? "true" : "false"}">${escapeHtml(label)}</button>`;
+      }).join("");
+
+      fillSelect($("country"), unique(roles.map(r => (r.country || "").trim())), state.country);
+      fillSelect($("source"), unique(roles.map(r => (r.source || "").trim())), state.source);
+      $("work").value = state.work;
+      $("sort").value = state.sort;
+      $("q").value = state.q;
+      $("new-only").setAttribute("aria-pressed", state.newOnly ? "true" : "false");
+      $("applied-filter").value = state.appliedFilter;
+      $("applied-filter-wrap").hidden = state.view !== "applied";
+
+      const chips = [];
+      const addChip = (key, label) => {
+        chips.push(`<button type="button" class="chip" data-clear="${key}">${escapeHtml(label)} <span class="x" aria-hidden="true">×</span></button>`);
+      };
+      if (state.q.trim()) addChip("q", `Search: ${state.q.trim()}`);
+      if (state.section !== "all") addChip("section", state.section);
+      if (state.country !== "all") addChip("country", state.country);
+      if (state.source !== "all") addChip("source", state.source);
+      if (state.work !== "all") addChip("work", workLabel(state.work));
+      if (state.newOnly) addChip("newOnly", "New only");
+      if (state.view === "applied" && state.appliedFilter !== "all") {
+        addChip("appliedFilter", state.appliedFilter === "progressed" ? "Progressed only" : "Applied only");
+      }
+      $("chips").innerHTML = chips.join("");
+      $("clear").disabled = chips.length === 0;
+    }
+
+    function pointsList(items, kind) {
+      if (!items.length) return "";
+      const mark = kind === "pro" ? "+" : "−";
+      return `<ul class="points">${items.map(p => `<li class="${kind}"><span class="mark">${mark}</span><span>${escapeHtml(p)}</span></li>`).join("")}</ul>`;
+    }
+
+    function actionButtons(role) {
+      const status = canonicalStatus(role);
+      const id = escapeHtml(role.id);
+      const bits = [];
+      if (status === "live" || status === "saved") {
+        if (status === "live") bits.push(`<button type="button" class="btn ghost" data-act="save" data-id="${id}">Save</button>`);
+        else bits.push(`<button type="button" class="btn ghost" data-act="live" data-id="${id}">Unsave</button>`);
+        bits.push(`<button type="button" class="btn primary" data-act="applied" data-id="${id}">Applied</button>`);
+        bits.push(`<button type="button" class="btn danger" data-act="reject" data-id="${id}">Reject</button>`);
+      } else if (status === "applied") {
+        bits.push(`<button type="button" class="btn primary" data-act="progressed" data-id="${id}">Mark progressed</button>`);
+        bits.push(`<button type="button" class="btn danger" data-act="reject" data-id="${id}">Reject</button>`);
+      } else if (status === "progressed") {
+        bits.push(`<button type="button" class="btn ghost" data-act="applied" data-id="${id}">Back to applied</button>`);
+        bits.push(`<button type="button" class="btn danger" data-act="reject" data-id="${id}">Reject</button>`);
+      } else if (status === "rejected") {
+        bits.push(`<button type="button" class="btn ghost" data-act="live" data-id="${id}">Restore to live</button>`);
+        bits.push(`<button type="button" class="btn" data-act="save" data-id="${id}">Move to saved</button>`);
+      }
+      return bits.join("");
+    }
+
+    function roleCard(role) {
+      const status = canonicalStatus(role);
+      const stale = role.in_latest === false;
+      const badges = [];
+      if (role.is_new) badges.push('<span class="badge new">New</span>');
+      if (status === "progressed") badges.push('<span class="badge progressed">Progressed</span>');
+      if (role.source) badges.push(`<span class="badge source">${escapeHtml(role.source)}</span>`);
+      if (stale) badges.push('<span class="badge stale">Not in latest search</span>');
+      const href = role.url ? escapeHtml(role.url) : "";
+      const title = escapeHtml(role.title || "Untitled role");
+      const titleHtml = href
+        ? `<a href="${href}" target="_blank" rel="noopener noreferrer">${title}</a>`
+        : title;
+      const locBits = [role.company, role.location, role.country].filter(Boolean);
+      const uniqueLoc = [];
+      for (const bit of locBits) {
+        if (!uniqueLoc.some(x => String(x).toLowerCase() === String(bit).toLowerCase() || String(x).includes(String(bit)))) uniqueLoc.push(bit);
+      }
+      const cvs = [];
+      if (role.cv_pdf) cvs.push(`<a class="btn cv" href="${escapeHtml(cvHref(role.cv_pdf, "pdf"))}" target="_blank" rel="noopener">PDF</a>`);
+      if (role.cv_docx) cvs.push(`<a class="btn cv" href="${escapeHtml(cvHref(role.cv_docx, "docx"))}" rel="noopener">DOCX</a>`);
+      const pros = splitPoints(role.pros);
+      const cons = splitPoints(role.cons);
+      const message = (role.message || "").trim();
+      const note = (role.note || "").trim();
+      const reason = (role.reason || "").trim();
+      const detail = (role.reason_detail || "").trim();
+      return `
+        <article class="role${stale ? " stale" : ""}" data-id="${escapeHtml(role.id)}">
+          <div class="role-head">
+            <div>
+              <div class="badges">${badges.join("")}</div>
+              <h2 class="role-title">${titleHtml}</h2>
+              <p class="meta-line">${escapeHtml(uniqueLoc.join(" · "))}</p>
+            </div>
+            <dl class="facts">
+              <div><dt>Salary</dt><dd>${salaryDisplay(role)}</dd></div>
+              <div><dt>Working pattern</dt><dd>${escapeHtml(role.work_pattern || "—")}</dd></div>
+            </dl>
+            <div class="actions">${actionButtons(role)}</div>
+          </div>
+          <div class="cv-row">${cvs.length ? cvs.join("") : '<span class="muted">CV not yet</span>'}</div>
+          <details class="more">
+            <summary>Details, pros &amp; cons, and message</summary>
+            <div class="detail-grid">
+              <div>
+                <dt class="muted" style="font-size:0.68rem;letter-spacing:.07em;text-transform:uppercase;margin-bottom:.3rem">Pros / cons vs your experience</dt>
+                ${pros.length || cons.length ? pointsList(pros, "pro") + pointsList(cons, "con") : '<p class="muted">—</p>'}
+                ${note ? `<p class="note-line"><strong>Note:</strong> ${escapeHtml(note)}</p>` : ""}
+                ${reason || detail ? `<p class="reason-line"><strong>Rejected:</strong> ${escapeHtml([reason, detail].filter(Boolean).join(" — "))}</p>` : ""}
+              </div>
+              <div>
+                <dt class="muted" style="font-size:0.68rem;letter-spacing:.07em;text-transform:uppercase;margin-bottom:.3rem">Message</dt>
+                ${message ? `<div class="message-box">${escapeHtml(message)}</div><div style="margin-top:.45rem"><button type="button" class="btn ghost copy-msg" data-id="${escapeHtml(role.id)}">Copy message</button></div>` : '<p class="muted">No message yet.</p>'}
+              </div>
+            </div>
+          </details>
+        </article>`;
+    }
+
+    function emptyCopy() {
+      if (state.view === "live") return ["No live jobs to show", "Live jobs are roles in the latest search that you have not yet saved, applied to, or rejected."];
+      if (state.view === "saved") return ["Nothing saved yet", "Save a role from Live jobs to keep it here with an optional note."];
+      if (state.view === "applied") return ["No applications yet", "When you mark a role as applied, it will appear here. Progressed roles stay in this list with a badge."];
+      return ["No rejected roles", "Rejected roles and reasons will land here, and feed the weekly search preferences."];
+    }
+
+    function render() {
+      renderChrome();
+      const shown = sortRoles(roles.filter(visible));
+      const main = $("main");
+      if (!shown.length) {
+        const [title, body] = emptyCopy();
+        main.innerHTML = `<div class="empty"><strong>${title}</strong>${escapeHtml(body)}</div>`;
+        return;
+      }
+      main.innerHTML = shown.map(roleCard).join("");
+    }
+
+    function toast(message) {
+      const el = $("toast");
+      el.textContent = message;
+      el.classList.add("show");
+      clearTimeout(toast._t);
+      toast._t = setTimeout(() => el.classList.remove("show"), 1600);
+    }
+
+    function clearKey(key) {
+      if (key === "q") state.q = "";
+      if (key === "section") state.section = "all";
+      if (key === "country") state.country = "all";
+      if (key === "source") state.source = "all";
+      if (key === "work") state.work = "all";
+      if (key === "newOnly") state.newOnly = false;
+      if (key === "appliedFilter") state.appliedFilter = "all";
+      saveState();
+      render();
+    }
+
+    function clearFilters() {
+      state.q = "";
+      state.section = "all";
+      state.country = "all";
+      state.source = "all";
+      state.work = "all";
+      state.newOnly = false;
+      state.appliedFilter = "all";
+      saveState();
+      render();
+    }
+
+    async function setStatus(id, status, extra = {}) {
+      const role = roles.find(r => String(r.id) === String(id));
+      if (!role) return;
+      const previous = { ...role };
+      Object.assign(role, extra, { status });
+      render();
+      try {
+        const { data, error } = await sb.rpc("jt_update_role", { p_id: String(id), p_patch: { status, ...extra } });
+        if (error) throw error;
+        if (data) {
+          const idx = roles.findIndex(r => String(r.id) === String(id));
+          if (idx >= 0) roles[idx] = { ...roles[idx], ...data };
+        }
+        render();
+        const labels = { live: "Moved to live", saved: "Saved", applied: "Marked as applied", progressed: "Marked as progressed", rejected: "Rejected" };
+        toast(labels[status] || "Updated");
+      } catch {
+        const idx = roles.findIndex(r => String(r.id) === String(id));
+        if (idx >= 0) roles[idx] = previous;
+        render();
+        toast("Could not save — please try again");
+      }
+    }
+
+    function openSave(id) {
+      const role = roles.find(r => String(r.id) === String(id));
+      if (!role) return;
+      pendingId = id;
+      $("save-lead").textContent = role.title + (role.company ? " · " + role.company : "");
+      $("save-note").value = role.note || "";
+      $("save-dialog").showModal();
+      $("save-note").focus();
+    }
+
+    function openReject(id) {
+      const role = roles.find(r => String(r.id) === String(id));
+      if (!role) return;
+      pendingId = id;
+      rejectReason = role.reason || "";
+      $("reject-lead").textContent = role.title + (role.company ? " · " + role.company : "");
+      $("reject-detail").value = role.reason_detail || "";
+      $("reject-reasons").innerHTML = REJECT_REASONS.map(([val, label]) =>
+        `<button type="button" class="pill" data-reason="${escapeHtml(val)}" aria-pressed="${rejectReason === val ? "true" : "false"}">${escapeHtml(label)}</button>`
+      ).join("");
+      $("reject-dialog").showModal();
+    }
+
+    function bind() {
+      $("view-tabs").addEventListener("click", (e) => {
+        const btn = e.target.closest("button[data-view]");
+        if (!btn) return;
+        state.view = btn.dataset.view;
+        saveState();
+        render();
+      });
+      $("section-tabs").addEventListener("click", (e) => {
+        const btn = e.target.closest("button[data-section]");
+        if (!btn) return;
+        state.section = btn.dataset.section;
+        saveState();
+        render();
+      });
+      let qTimer;
+      $("q").addEventListener("input", (e) => {
+        state.q = e.target.value;
+        saveState();
+        clearTimeout(qTimer);
+        qTimer = setTimeout(render, 120);
+      });
+      ["country", "source", "work", "sort", "applied-filter"].forEach((id) => {
+        $(id).addEventListener("change", (e) => {
+          const map = { country: "country", source: "source", work: "work", sort: "sort", "applied-filter": "appliedFilter" };
+          state[map[id]] = e.target.value;
+          saveState();
+          render();
+        });
+      });
+      $("new-only").addEventListener("click", () => {
+        state.newOnly = !state.newOnly;
+        saveState();
+        render();
+      });
+      $("clear").addEventListener("click", clearFilters);
+      $("chips").addEventListener("click", (e) => {
+        const btn = e.target.closest("button[data-clear]");
+        if (btn) clearKey(btn.dataset.clear);
+      });
+      $("main").addEventListener("click", (e) => {
+        const copy = e.target.closest("button.copy-msg");
+        if (copy) {
+          const role = roles.find(r => String(r.id) === copy.dataset.id);
+          if (!role || !role.message) return;
+          navigator.clipboard.writeText(role.message).then(() => {
+            copy.textContent = "Copied";
+            setTimeout(() => { copy.textContent = "Copy message"; }, 1200);
+          }).catch(() => toast("Copy failed"));
+          return;
+        }
+        const btn = e.target.closest("button[data-act]");
+        if (!btn) return;
+        const { act, id } = btn.dataset;
+        if (act === "save") openSave(id);
+        else if (act === "reject") openReject(id);
+        else setStatus(id, act);
+      });
+      $("reject-reasons").addEventListener("click", (e) => {
+        const btn = e.target.closest("button[data-reason]");
+        if (!btn) return;
+        rejectReason = btn.dataset.reason;
+        $("reject-reasons").querySelectorAll("button").forEach(b => {
+          b.setAttribute("aria-pressed", b === btn ? "true" : "false");
+        });
+      });
+      $("save-form").addEventListener("submit", (e) => {
+        const submitter = e.submitter;
+        if (submitter && submitter.value === "confirm" && pendingId) {
+          setStatus(pendingId, "saved", { note: $("save-note").value.trim() });
+        }
+        pendingId = null;
+      });
+      $("reject-form").addEventListener("submit", (e) => {
+        const submitter = e.submitter;
+        if (submitter && submitter.value === "confirm" && pendingId) {
+          const detail = $("reject-detail").value.trim();
+          if (rejectReason === "other" && !detail) {
+            e.preventDefault();
+            toast("Add a short reason for Other");
+            return;
+          }
+          setStatus(pendingId, "rejected", { reason: rejectReason || "other", reason_detail: detail });
+        }
+        pendingId = null;
+        rejectReason = "";
+      });
+    }
+
+    async function signAll() {
+      const pdfs = [...new Set(roles.map(r => r.cv_pdf).filter(Boolean))];
+      const docxs = [...new Set(roles.map(r => r.cv_docx).filter(Boolean))];
+      const next = { pdf: {}, docx: {}, at: Date.now() };
+      const bucket = sb.storage.from(CV_BUCKET);
+      const [a, b] = await Promise.all([
+        pdfs.length ? bucket.createSignedUrls(pdfs, SIGN_TTL) : { data: [] },
+        docxs.length ? bucket.createSignedUrls(docxs, SIGN_TTL, { download: true }) : { data: [] }
+      ]);
+      for (const item of (a.data || [])) if (item.signedUrl) next.pdf[item.path] = item.signedUrl;
+      for (const item of (b.data || [])) if (item.signedUrl) next.docx[item.path] = item.signedUrl;
+      signed = next;
+    }
+
+    async function load() {
+      try {
+        const { data, error } = await sb.rpc("jt_list_roles");
+        if (error) throw error;
+        roles = (data || []).map(r => ({ ...r, ...(r.extra || {}) }));
+        await signAll();
+      } catch (err) {
+        if (err && (err.status === 401 || /JWT|token/i.test(err.message || ""))) { lock(); return; }
+        $("counts").textContent = "Could not load roles — refresh to try again.";
+      }
+      render();
+    }
+
+    function lock() {
+      document.body.classList.add("locked");
+      roles = [];
+      $("main").innerHTML = "";
+      setTimeout(() => $("login-password").focus(), 50);
+    }
+    function unlock() {
+      document.body.classList.remove("locked");
+      $("login-password").value = "";
+      load();
+    }
+
+    $("login-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = $("login-btn");
+      btn.disabled = true;
+      $("login-error").textContent = "";
+      const { error } = await sb.auth.signInWithPassword({ email: LOGIN_EMAIL, password: $("login-password").value });
+      btn.disabled = false;
+      if (error) { $("login-error").textContent = "That password didn't work. Please try again."; return; }
+      unlock();
+    });
+    $("signout").addEventListener("click", async () => { await sb.auth.signOut(); lock(); });
+    // Re-sign CV links before they expire, and pick up changes made on other devices.
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible" && !document.body.classList.contains("locked")) load();
+    });
+    setInterval(() => {
+      if (!document.body.classList.contains("locked") && Date.now() - signed.at > (SIGN_TTL - 1800) * 1000) load();
+    }, 5 * 60 * 1000);
+
+    loadState();
+    bind();
+    sb.auth.getSession().then(({ data }) => { if (data && data.session) unlock(); else lock(); });
+  </script>
+</body>
+</html>
